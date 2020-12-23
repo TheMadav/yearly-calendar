@@ -6,68 +6,67 @@ require 'icalendar'
 
 BIRTHDAY_CSV = "./data/01_birthdays.csv"
 # Download from Hebcal
-HEBCAL_CSV = "./data/hebcal_2021_eur.csv"
+HEBCAL = "./data/hebcal_2021.ics"
 # Download from Schulferien.org https://www.schulferien.org/deutschland/ical/
-#HESSEN_CSV = "./data/hessen.csv"
 HOLIDAYS = './data/feiertage_hessen_2021.ics'
-VACATION_ICAL ="./data/Hessen_2021_Schulferien.ics"
+VACATIONS ="./data/Hessen_2021_Schulferien.ics"
 
-JEWISH_COLOR    = "Blue!20"
-BIRTHDAY_COLOR  = "Red!20"
-HOLIDAY_COLOR = "Black!20"
-VACATION_COLOR  ="Black!10"
+JEWISH_HOLIDAY_COLOR    = "Blue!20"
+BIRTHDAY_COLOR          = "Red!20"
+CHRISTIAN_HOLIDAY_COLOR = "Black!20"
+VACATION_COLOR             ="Black!10"
 
 def read_birthday_csv 
     csvImport = CSV.read(BIRTHDAY_CSV,  :headers => %i[date name icon]) 
     dates = Array.new
-    csvImport.each do |birthday|
-        dates << {:date => Date.parse(birthday[:date]) , :description => "#{birthday[:name]}", :color=>BIRTHDAY_COLOR}
+    csvImport.each do |event|
+        birthday = Date.parse(event[:date])
+        # Calculates the correct year for the birthday list
+        difference = Time.new.year+1 -birthday.year
+        dates << {:date => birthday.next_year(difference) , :description => "\\#{event[:icon]} ~ #{event[:name]} (#{difference})", :color=>BIRTHDAY_COLOR}
     end
     return dates
 end
 
-def read_hebcal_csv 
-    csvImport = CSV.read(HEBCAL_CSV, :headers=>true) 
+def import_ics_files file
+     # Open a file or pass a string to the parser
+     cal_file = File.open(file)
+     # Parser returns an array of calendars because a single file
+     # can have multiple calendars.
+     cals = Icalendar::Calendar.parse(cal_file)
+     return cals.first
+end
+
+def import_jewish_holidays 
+    cals = import_ics_files HEBCAL
     dates = Array.new
-    csvImport.each do |row|
-        dates << {:date => Date.parse(row["Start Date"]) , :description => row["Subject"], :color=>JEWISH_COLOR}
+    cals.events.each do |event|
+        dates << {:date => event.dtstart , :description => "\\faStarOfDavid ~ #{event.summary}", :color=>JEWISH_HOLIDAY_COLOR}
     end
     return dates
 end
 
-def read_vacation_hessen_ical
-    # Open a file or pass a string to the parser
-    cal_file = File.open(VACATION_ICAL)
-    # Parser returns an array of calendars because a single file
-    # can have multiple calendars.
-    cals = Icalendar::Calendar.parse(cal_file)
+def import_vacation_dates
+    cals = import_ics_files VACATIONS
     dates = Array.new
-    cals.first.events.each do |event|
-        dates << {:date => event.dtstart , :enddate => event.dtend, :description => event.summary.split(" ").first, :color=>VACATION_COLOR}
+    cals.events.each do |event|
+        dates << {:date => event.dtstart , :enddate => event.dtend, :description => "", :color=>VACATION_COLOR}
     end
     return dates
 end
 
-def read_hessen_csv 
-    # Open a file or pass a string to the parser
-    cal_file = File.open(HOLIDAYS)
-    # Parser returns an array of calendars because a single file
-    # can have multiple calendars.
-    cals = Icalendar::Calendar.parse(cal_file)
+def import_holidays 
+    cals = import_ics_files HOLIDAYS
     dates = Array.new
-    cals.first.events.each do |event|
-        dates << {:date => event.dtstart , :description => event.summary, :color=>HOLIDAY_COLOR}
+    cals.events.each do |event|
+        dates << {:date => event.dtstart , :description => event.summary, :color=>CHRISTIAN_HOLIDAY_COLOR}
     end
     return dates
 end
 
 def write_events_file events, file
     eventList = Array.new
-    events.each do |event|
-        difference = Time.new.year+1 - event[:date].year
-        # Calculates the correct year for the birthday list - should probably moved to the birthday function
-        event[:date] = event[:date].next_year(difference)
-        
+    events.each do |event|        
         unless event[:enddate].nil?
             eventList << "\\period{#{event[:date]}}{#{event[:enddate]}}[name=#{event[:description]}, color=#{event[:color]}]"
         else
@@ -80,6 +79,6 @@ def write_events_file events, file
 end
 
 write_events_file(read_birthday_csv, "Geburtstage")
-write_events_file(read_hebcal_csv, "JewishHolidays")
-write_events_file(read_hessen_csv, "GesetzlicheFeiertage")
-write_events_file(read_vacation_hessen_ical, "Ferien")
+write_events_file(import_jewish_holidays, "JewishHolidays")
+write_events_file(import_holidays, "GesetzlicheFeiertage")
+write_events_file(import_vacation_dates, "Ferien")

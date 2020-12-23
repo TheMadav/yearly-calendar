@@ -25,9 +25,6 @@ Ein Ruby-Script um einen Jahreskalender zu erzeugen.
 
 ## ToDOs
 
-- Integration Font Awesome für Icons neben Feiertagen 
-- Berechnung des Alters für Geburtstage
 - Wichtigkeit der Termine (Feiertage > Wochenende > Ferien)
-- HebCal erzeugt mehrfache Einträge - prüfen und ggf. auf unique bestehen
-
+- Example files
 
