@@ -9,22 +9,17 @@ Ein Ruby-Script um einen Jahreskalender zu erzeugen.
 
 ## Nutzung
 
-- Ordner ```Data``` anlegen.
-- Event-Liste als ics Dateien einfügen
-- Geburtstagsliste als CSV einfügen (Datum, Name)
-- Ausführen des Ruby Scripts
-- Anschließend ausführen des Ruby-Scripts
-- Anschließend pdflatex
+- Datei ```birthdaY_example```in Ordner ```data``` umbenennen in ```birthday.csv```
+- Geburtstagsliste als CSV einfügen (Datum, Name, FontAwesome Icon), siehe Beispieldatei
+- Ausführen des Bash-skripts calendar.sh
 
 
 ## Quellen
 
 - Kalender TEX siehe https://github.com/rolfn/kalenderRN
-- Ferientermine von https://www.schulferien.org/deutschland/ical/
-- Jüdische Feiertage von Hebcal
+- Ferientermine von https://www.schulferien.eu
 
 ## ToDOs
 
 - Wichtigkeit der Termine (Feiertage > Wochenende > Ferien)
-- Example files
 

@@ -7,7 +7,7 @@ require 'net/http'
 uri = URI('http://www.facebook.com/ical/b.php?uid=13301632&key=asdgagaweg')
 
 
-BIRTHDAY_CSV = "./data/01_birthdays.csv"
+BIRTHDAY_CSV = "./data/birthdays.csv"
 # Download from Hebcal
 HEBCAL = "http://download.hebcal.com/ical/jewish-holidays.ics"
 # Download from Schulferien.org https://www.schulferien.org/deutschland/ical/
