@@ -1,0 +1,26 @@
+\listfiles
+\documentclass{tikz-kalender}
+
+% a simple calender
+
+\setup{%
+  year=2021,
+  yearText= ,
+  title=2021,
+  events={
+      events/JewishHolidays,
+%      events/Ferien, 
+      events/Geburtstage, 
+      events/GesetzlicheFeiertage
+    },
+    monthBGcolor = blue!80,
+    titleColor = black!100,
+    saturdayColor = black!20,
+    sundayColor = black!50,
+    showweeknumbers = true
+}
+
+\begin{document}
+  \makeKalender
+\end{document} 
+
