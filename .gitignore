@@ -63,3 +63,4 @@ events
 *.pdf
 output
 *.gz
+!kalender-example.pdf
