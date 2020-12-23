@@ -65,14 +65,12 @@ def write_events_file events, file
     eventList = Array.new
     events.each do |event|
         difference = Time.new.year+1 - event[:date].year
+        # Calculates the correct year for the birthday list - should probably moved to the birthday function
         event[:date] = event[:date].next_year(difference)
         
         unless event[:enddate].nil?
-            event[:enddate] = event[:enddate].next_year(difference)
-            #\event{\year-03-14}{Albert = Einstein (1879)}
             eventList << "\\period{#{event[:date]}}{#{event[:enddate]}}[name=#{event[:description]}, color=#{event[:color]}]"
         else
-            #\event{\year-03-14}{Albert = Einstein (1879)}
             eventList << "\\event*{#{event[:date]}}{#{event[:description]}}[color=#{event[:color]}]"
         end
     end
@@ -80,16 +78,8 @@ def write_events_file events, file
     return eventList
 
 end
-read_vacation_hessen_ical
-write_events_file(read_birthday_csv, "Geburtstage")
 
-#write_events_file(read_hebcal_csv, "JewishHolidays")
+write_events_file(read_birthday_csv, "Geburtstage")
+write_events_file(read_hebcal_csv, "JewishHolidays")
 write_events_file(read_hessen_csv, "GesetzlicheFeiertage")
 write_events_file(read_vacation_hessen_ical, "Ferien")
-exit
-
-#puts calender_template
-#calender_template = replace_in_template calender_template, birthdays, "birthdays"
-#calender_template = replace_in_template calender_template, jewish_holidays, "jewish_holidays"
-timestamp = Time.now.strftime "%Y-%m-%d-%H-%M" 
-File.open("./output/#{timestamp}-calender.tex", 'w') { |file| file.write(calender_template) }

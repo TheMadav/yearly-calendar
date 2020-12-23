@@ -62,3 +62,4 @@ events
 *.fdb_latexmk
 *.pdf
 output
+*.gz
