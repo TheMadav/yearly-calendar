@@ -9,7 +9,7 @@ Ein Ruby-Script um einen Jahreskalender zu erzeugen.
 
 ## Nutzung
 
-- Datei ```birthdaY_example```in Ordner ```data``` umbenennen in ```birthday.csv```
+- Datei ```birthday_example.csv```in Ordner ```data``` umbenennen in ```birthday.csv```
 - Geburtstagsliste als CSV einfügen (Datum, Name, FontAwesome Icon), siehe Beispieldatei
 - Ausführen des Bash-skripts calendar.sh
 
