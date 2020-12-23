@@ -6,32 +6,27 @@ require 'icalendar'
 require 'net/http'
 uri = URI('http://www.facebook.com/ical/b.php?uid=13301632&key=asdgagaweg')
 
-
+# Sources for Events
 BIRTHDAY_CSV = "./data/birthdays.csv"
-# Download from Hebcal
 HEBCAL = "http://download.hebcal.com/ical/jewish-holidays.ics"
-# Download from Schulferien.org https://www.schulferien.org/deutschland/ical/
-# HOLIDAYS = './data/feiertage_hessen_2021.ics'
-# VACATIONS = ""./data/Hessen_2021_Schulferien.ics""
 VACATIONS   = "https://www.schulferien.eu/downloads/ical4.php?land=8&type=1&year=2021"
 HOLIDAYS    = "https://www.schulferien.eu/downloads/ical4.php?land=HE&type=0&year=2021"
 
+# Colors for each event type
 JEWISH_HOLIDAY_COLOR    = "Blue!20"
 BIRTHDAY_COLOR          = "Red!20"
 CHRISTIAN_HOLIDAY_COLOR = "Black!20"
-VACATION_COLOR             ="Black!10"
+VACATION_COLOR          ="Black!10"
 
 def read_birthday_csv 
     csvImport = CSV.read(BIRTHDAY_CSV,  :headers => %i[date name icon]) 
     dates = Array.new
     csvImport.each do |event|
         birthday = Date.parse(event[:date])
-        age = ""
-        difference = Time.new.year+1 -birthday.year
-        unless birthday.year > Time.new.year
-            age = "(#{difference})"
-        end
         # Calculates the correct year for the birthday list
+        difference = Time.new.year+1 -birthday.year
+
+        difference < 0 ? age = "" : age = "(#{difference})"
         
         dates << {:date => birthday.next_year(difference) , :description => "\\#{event[:icon]} ~ #{event[:name]} #{age}", :color=>BIRTHDAY_COLOR}
     end
@@ -100,6 +95,11 @@ def write_events_file events, file
 end
 
 write_events_file(read_birthday_csv, "Geburtstage")
+puts "Imported birthdays"
 write_events_file(import_jewish_holidays, "JewishHolidays")
+puts "Imported jewish holidays"
 write_events_file(import_holidays, "GesetzlicheFeiertage")
+puts "Imported holidays"
 write_events_file(import_vacation_dates, "Ferien")
+puts "Imported vacations"
+puts "Import completed, Event-Files created"
