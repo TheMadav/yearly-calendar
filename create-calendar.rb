@@ -3,13 +3,18 @@ require 'CSV'
 require 'pp'
 require "Date"
 require 'icalendar'
+require 'net/http'
+uri = URI('http://www.facebook.com/ical/b.php?uid=13301632&key=asdgagaweg')
+
 
 BIRTHDAY_CSV = "./data/01_birthdays.csv"
 # Download from Hebcal
-HEBCAL = "./data/hebcal_2021.ics"
+HEBCAL = "http://download.hebcal.com/ical/jewish-holidays.ics"
 # Download from Schulferien.org https://www.schulferien.org/deutschland/ical/
-HOLIDAYS = './data/feiertage_hessen_2021.ics'
-VACATIONS ="./data/Hessen_2021_Schulferien.ics"
+# HOLIDAYS = './data/feiertage_hessen_2021.ics'
+# VACATIONS = ""./data/Hessen_2021_Schulferien.ics""
+VACATIONS   = "https://www.schulferien.eu/downloads/ical4.php?land=8&type=1&year=2021"
+HOLIDAYS    = "https://www.schulferien.eu/downloads/ical4.php?land=HE&type=0&year=2021"
 
 JEWISH_HOLIDAY_COLOR    = "Blue!20"
 BIRTHDAY_COLOR          = "Red!20"
@@ -21,9 +26,14 @@ def read_birthday_csv
     dates = Array.new
     csvImport.each do |event|
         birthday = Date.parse(event[:date])
-        # Calculates the correct year for the birthday list
+        age = ""
         difference = Time.new.year+1 -birthday.year
-        dates << {:date => birthday.next_year(difference) , :description => "\\#{event[:icon]} ~ #{event[:name]} (#{difference})", :color=>BIRTHDAY_COLOR}
+        unless birthday.year > Time.new.year
+            age = "(#{difference})"
+        end
+        # Calculates the correct year for the birthday list
+        
+        dates << {:date => birthday.next_year(difference) , :description => "\\#{event[:icon]} ~ #{event[:name]} #{age}", :color=>BIRTHDAY_COLOR}
     end
     return dates
 end
@@ -37,8 +47,19 @@ def import_ics_files file
      return cals.first
 end
 
+def import_ics_files_server url
+    uri = URI(url)
+    calendar = Net::HTTP.get(uri)
+    # Open a file or pass a string to the parser
+    # Parser returns an array of calendars because a single file
+    # can have multiple calendars.
+    cals = Icalendar::Calendar.parse(calendar)
+    return cals.first
+end
+
 def import_jewish_holidays 
-    cals = import_ics_files HEBCAL
+    
+    cals = import_ics_files_server HEBCAL
     dates = Array.new
     cals.events.each do |event|
         dates << {:date => event.dtstart , :description => "\\faStarOfDavid ~ #{event.summary}", :color=>JEWISH_HOLIDAY_COLOR}
@@ -47,7 +68,7 @@ def import_jewish_holidays
 end
 
 def import_vacation_dates
-    cals = import_ics_files VACATIONS
+    cals = import_ics_files_server VACATIONS
     dates = Array.new
     cals.events.each do |event|
         dates << {:date => event.dtstart , :enddate => event.dtend, :description => "", :color=>VACATION_COLOR}
@@ -56,7 +77,7 @@ def import_vacation_dates
 end
 
 def import_holidays 
-    cals = import_ics_files HOLIDAYS
+    cals = import_ics_files_server HOLIDAYS
     dates = Array.new
     cals.events.each do |event|
         dates << {:date => event.dtstart , :description => event.summary, :color=>CHRISTIAN_HOLIDAY_COLOR}
