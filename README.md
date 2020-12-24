@@ -23,8 +23,8 @@ Ein Ruby-Script um einen Jahreskalender zu erzeugen.
 | file |Lokale Datei  | ./data/birthdays.csv |
 | color | Farbe, die Events im Kalender haben soll  | Black!20 |
 | period | Handelt es sich um Zeiträume, also mehrere Tage hintereinander (```true```=Zeitraum). Standardmäßig wird ```false`` angenommen | true/false |
-
 | calcDifference | Soll der Unterschied zu heute berechnet werden, bspw. für das Alter von Geburtstagen? Standardmäßig wird ```false``` angenommen | true/false |
+| icon | Das Standard-Icon (Font Awesome) für einen Import (wird bei lokalen CSV nicht berücksichtigt, da dort Icon pro Zeile angegeben werden kann | \faBirthdayCake |
 
 ## Details
 ### Calc Difference
@@ -39,7 +39,8 @@ Ein Ruby-Script um einen Jahreskalender zu erzeugen.
 ## ToDOs
 
 - Wichtigkeit der Termine (Feiertage > Wochenende > Ferien)
-- 
+- Standard-Icon auch für lokale CSV berücksichtigen, kann ja überschrieben werden
+
 ## Lizenz
 
 MIT Lizenz gilt nicht für die Tex-Dateien, diese stehen unter CC-BY-SA, siehe https://github.com/rolfn/kalenderRN
