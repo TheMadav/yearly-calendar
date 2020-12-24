@@ -32,7 +32,9 @@
 \newcommand*\RN@periods{}
 \newcommand*\RN@tempa{}
 \newcommand*\RN@tempb{}
-
+\newcommand*\RN@holidays{}
+\newcommand*\RN@holidays@I{}
+\newcommand*\RN@holidays@II{}
 \newcommand*\RN@titleColor{dark}
 \newcommand*\RN@eventColor{medium}
 \newcommand*\RN@monthBGcolor{dark}
@@ -187,12 +189,45 @@
   color/.estore in = \RN@eventColor
 }
 
+\pgfkeys{%
+  /RN/.is family,
+  %
+  /RN/zones/A/.cd,
+  name/.initial = {\small\ Zone Blue},
+  style/.style = {
+    /tikz,
+    line width=2pt,
+    color=blue!50,
+    transform canvas={xshift = -5pt},
+  },
+  %
+  /RN/zones/B/.cd,
+  name/.initial = {\small\ Zone Gelb},
+  style/.style = {
+    /tikz,
+    line width=2pt,
+    color=blue,
+    transform canvas={xshift = -3pt}
+  },
+  %
+  /RN/zones/C/.cd,
+  name/.initial = {\small\ Zone Rot},
+  style/.style = {
+    /tikz,
+    line width=2pt,
+    color=red,
+    transform canvas={xshift = -1pt}
+  },
+}
+
+\newcommand{\square}[1]{\tikz{\filldraw[draw=#1,fill=#1] (0,0) rectangle (0.2cm,0.2cm);}}%
+
 \newcommand\RN@formatTitle[3]{%
   \raisebox{-.3\height}{\parbox[b]{#1}{%
     \color{\RN@titleColor}%
-    \makebox[0pt][l]{\RN@yearFont#2}\hfill
-    \RN@titleFont#3\hfill\mbox{}%
-  }}%
+      \makebox[0pt][l]{\RN@yearFont#2}\hfill%
+      \RN@titleFont#3\hfill\mbox{}\small\\%
+    }}
 }
 \newcommand*\RN@formatDayNb[1]{%
   \RN@dayNbFont#1\hspace{50\RN@xunit}%
@@ -271,7 +306,7 @@
   \@ifundefined{event@#1}{%
     \expandafter\protected@xdef\csname event@#1\endcsname{#2}%
     \protected@edef\@tempa{\noexpand\@ifundefined{pgf@sh@ns@cal-#1}{}{%
-        \noexpand\node[anchor=south west,inner sep=0pt] at (cal-#1.south east){%
+    \noexpand\node[anchor=south west,inner sep=0pt,transform canvas={xshift = -6pt}] at (cal-#1.south east){%
         \noexpand\RN@formatEvent{\the\@tempdima}{%
           \noexpand\csname event@#1\endcsname}};%
       }
@@ -294,6 +329,35 @@
 }
 
 \let\RN@event@ii@orig=\RN@event@ii
+
+\newcommand\RN@lineholiday[3]{%
+  \edef\@tempa{%
+    \noexpand\draw [/RN/zones/#2/style,#3] (cal-#1.north east) -- (cal-#1.south east);%
+  }%
+  \pgfcalendarifdate{#1}{at most=06-last}{%
+    \expandafter\g@addto@macro\expandafter\RN@holidays@I\expandafter{\@tempa}%
+  }{%
+    \expandafter\g@addto@macro\expandafter\RN@holidays@II\expandafter{\@tempa}%
+  }%
+}
+
+\newcommand*\holidays[3]{%
+  \@ifnextchar[{\RN@holidays@i{#1}{#2}{#3}}{\RN@holidays@i{#1}{#2}{#3}[]}%
+}
+
+\newcommand*\RN@holidays@i{}%
+\def\RN@holidays@i#1#2#3[#4]{%
+  \edef\@tempa{%
+    \noexpand\calendar[dates=#2 to #3,
+      day code={
+        \noexpand\RN@lineholiday{%
+          \noexpand\pgfcalendarcurrentyear-\noexpand\pgfcalendarcurrentmonth-\noexpand\pgfcalendarcurrentday%
+        }{#1}{#4}
+    }];
+  }%
+ %
+  \expandafter\g@addto@macro\expandafter\RN@holidays\expandafter{\@tempa}%
+}
 
 \newcommand\RN@makeKalender[2]{%
   \sbox\RN@tempbox{%
@@ -335,6 +399,8 @@
         }%
       ];%
       \pgfcalendarifdate{#1}{at most=06-last}{\RN@events@I}{\RN@events@II}%
+      \RN@holidays%
+      \pgfcalendarifdate{#1}{at most=06-last}{\RN@holidays@I}{\RN@holidays@II}%
     \end{tikzpicture}%
   }%
   \parbox[c][\RN@calheight]{\RN@calwidth}{%

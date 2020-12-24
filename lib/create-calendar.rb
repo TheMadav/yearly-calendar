@@ -27,7 +27,8 @@ def write_events_file events, source, name
     eventList = Array.new
     events.each do |event|        
         if source.has_key? "period"
-            eventList << "\\period{#{event[:date]}}{#{event[:enddate]}}[name=#{event[:description]}, color=#{event[:color]}]"
+            eventList << "\\holidays{A}{#{event[:date]}}{#{event[:enddate]}}"
+            #eventList << "\\period{#{event[:date]}}{#{event[:enddate]}}[name=#{event[:description]}, color=#{event[:color]}]"
         else
             eventList << "\\event*{#{event[:date]}}{#{event[:description]}}[color=#{event[:color]}]"
         end
@@ -45,10 +46,13 @@ def import_ical_file source
     
     dates = Array.new
     cals.events.each do |event|
+        enddate = [event.dtend.to_date, Date.new(Time.now.year+1, 12, 31)].min
         dates << {
                 :date           => event.dtstart , 
+                :enddate        => source['period'].nil? ? nil : enddate,
                 :description    => source['icon'].nil? ? event.summary : "\\#{source['icon']} ~ #{event.summary}", 
                 :color          => source['color']
+
         }
     end
     return dates
