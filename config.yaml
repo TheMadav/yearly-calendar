@@ -1,0 +1,15 @@
+- jewishHolidays:
+    url: http://download.hebcal.com/ical/jewish-holidays.ics
+    color: Blue!20
+    icon: faStarOfDavid
+- birthdays:
+    file: ./data/birthdays.csv
+    color: Red!20
+    calcDifference: true
+- holidays:
+    url: https://www.schulferien.eu/downloads/ical4.php?land=HE&type=0&year=2021
+    color: Black!20
+- vacation:
+    url: https://www.schulferien.eu/downloads/ical4.php?land=8&type=1&year=2021
+    color: Black!10
+    period: true

@@ -1,40 +1,12 @@
 require 'rubygems'
-require 'CSV'
+require 'csv'
 require 'pp'
 require "Date"
 require 'icalendar'
 require 'net/http'
-uri = URI('http://www.facebook.com/ical/b.php?uid=13301632&key=asdgagaweg')
+require 'yaml'
 
-# Sources for Events
-BIRTHDAY_CSV = "./data/birthdays.csv"
-HEBCAL = "http://download.hebcal.com/ical/jewish-holidays.ics"
-VACATIONS   = "https://www.schulferien.eu/downloads/ical4.php?land=8&type=1&year=2021"
-HOLIDAYS    = "https://www.schulferien.eu/downloads/ical4.php?land=HE&type=0&year=2021"
-
-# Colors for each event type
-JEWISH_HOLIDAY_COLOR    = "Blue!20"
-BIRTHDAY_COLOR          = "Red!20"
-CHRISTIAN_HOLIDAY_COLOR = "Black!20"
-VACATION_COLOR          ="Black!10"
-
-def read_birthday_csv 
-    csvImport = CSV.read(BIRTHDAY_CSV,  :headers => %i[date name icon]) 
-    dates = Array.new
-    csvImport.each do |event|
-        birthday = Date.parse(event[:date])
-        # Calculates the correct year for the birthday list
-        difference = Time.new.year+1 -birthday.year
-
-        difference < 0 ? age = "" : age = "(#{difference})"
-        
-        dates << {:date => birthday.next_year(difference) , :description => "\\#{event[:icon]} ~ #{event[:name]} #{age}", :color=>BIRTHDAY_COLOR}
-    end
-    return dates
-end
-
-def import_ics_files file
-     # Open a file or pass a string to the parser
+def import_ics_file file
      cal_file = File.open(file)
      # Parser returns an array of calendars because a single file
      # can have multiple calendars.
@@ -42,64 +14,106 @@ def import_ics_files file
      return cals.first
 end
 
-def import_ics_files_server url
+def import_ics_file_from_server url
     uri = URI(url)
     calendar = Net::HTTP.get(uri)
-    # Open a file or pass a string to the parser
     # Parser returns an array of calendars because a single file
     # can have multiple calendars.
     cals = Icalendar::Calendar.parse(calendar)
     return cals.first
 end
 
-def import_jewish_holidays 
-    
-    cals = import_ics_files_server HEBCAL
-    dates = Array.new
-    cals.events.each do |event|
-        dates << {:date => event.dtstart , :description => "\\faStarOfDavid ~ #{event.summary}", :color=>JEWISH_HOLIDAY_COLOR}
-    end
-    return dates
-end
-
-def import_vacation_dates
-    cals = import_ics_files_server VACATIONS
-    dates = Array.new
-    cals.events.each do |event|
-        dates << {:date => event.dtstart , :enddate => event.dtend, :description => "", :color=>VACATION_COLOR}
-    end
-    return dates
-end
-
-def import_holidays 
-    cals = import_ics_files_server HOLIDAYS
-    dates = Array.new
-    cals.events.each do |event|
-        dates << {:date => event.dtstart , :description => event.summary, :color=>CHRISTIAN_HOLIDAY_COLOR}
-    end
-    return dates
-end
-
-def write_events_file events, file
+def write_events_file events, source, name
     eventList = Array.new
     events.each do |event|        
-        unless event[:enddate].nil?
+        if source.has_key? "period"
             eventList << "\\period{#{event[:date]}}{#{event[:enddate]}}[name=#{event[:description]}, color=#{event[:color]}]"
         else
             eventList << "\\event*{#{event[:date]}}{#{event[:description]}}[color=#{event[:color]}]"
         end
     end
-    File.open("./events/#{file}.events", 'w') { |file| file.write(eventList.join("\n")) }
+    File.open("./events/#{name}.events", 'w') { |file| file.write(eventList.join("\n")) }
     return eventList
+end
+
+def import_ical_file source 
+    if source.has_key? CONFIG_FILE
+        cals = import_ics_file_local source[CONFIG_FILE]
+    elsif source.has_key? CONFIG_URL
+        cals = import_ics_file_from_server source[CONFIG_URL]
+    end
+    
+    dates = Array.new
+    cals.events.each do |event|
+        dates << {
+                :date           => event.dtstart , 
+                :description    => source['icon'].nil? ? event.summary : "\\#{source['icon']} ~ #{event.summary}", 
+                :color          => source['color']
+        }
+    end
+    return dates
 
 end
 
-write_events_file(read_birthday_csv, "Geburtstage")
-puts "Imported birthdays"
-write_events_file(import_jewish_holidays, "JewishHolidays")
-puts "Imported jewish holidays"
-write_events_file(import_holidays, "GesetzlicheFeiertage")
-puts "Imported holidays"
-write_events_file(import_vacation_dates, "Ferien")
-puts "Imported vacations"
-puts "Import completed, Event-Files created"
+def import_local_csv source 
+    csvImport = CSV.read(source['file'],  :headers => %i[date name icon]) 
+    dates = Array.new
+    csvImport.each do |event|
+        date = Date.parse(event[:date])
+        difference = Time.new.year+1 -date.year
+
+        # Build the description from icon, name and difference (if wanted)
+        description = event.has_key?(:icon) ? "\\#{event[:icon]} ~" : ""
+        description = description + event[:name]
+                
+        if source['calcDifference'] 
+            # Calculates the correct year for the birthday list    
+            difference < 0 ? age = "" : description = description + "(#{difference})"
+        end
+        dates << {
+                :date           => date.next_year(difference) , 
+                :description    => description, 
+                :color          => source['color']
+            }
+    end
+    return dates
+end
+
+# MAGIC VALUES
+CSV_FILE    = ".csv"
+ICS_File    = ".ics"
+CONFIG_URL  = "url"
+CONFIG_FILE = "file"
+
+puts "Loading configuration..."
+file = File.open("./config.yaml")
+config = YAML.load(file) 
+
+
+puts "#{config.count} sources for events"
+
+config.each do |source|
+    name = source.first[0]
+    puts "Starting with #{name}"
+    
+    if source[name].has_key? CONFIG_URL
+        puts "Loading events from server"
+        events = import_ical_file source[name]
+    
+    elsif source[name].has_key? CONFIG_FILE
+        unless File.exist?(source[name]['file'])
+            puts "ERROR: File does not exist, continue with next source"
+            next
+        end
+        puts "Loading events from file"
+        if File.extname(source[name][CONFIG_FILE]) == CSV_FILE
+            events = import_local_csv source[name]
+        elsif File.extname(source[name][CONFIG_FILE]) == ICS_File
+            events = import_ical_file source[name]
+        end        
+    end
+    
+    puts "Writing events file"
+    write_events_file events, source[name], name
+    puts "=================="
+end

@@ -4,15 +4,32 @@ Ein Ruby-Script um einen Jahreskalender zu erzeugen.
 ## Voraussetzungen
 
 - Ruby
-- Latex
-
+- pdfLatex
 
 ## Nutzung
 
 - Datei ```birthday_example.csv```in Ordner ```data``` umbenennen in ```birthday.csv```
 - Geburtstagsliste als CSV einfügen (Datum, Name, FontAwesome Icon), siehe Beispieldatei
 - Ausführen des Bash-skripts calendar.sh
+- config.YAML anpassen, um weitere Quellen anzupassen
 
+
+## Konfiguration detailliert
+
+| Name | Beschreibung  | Beispiel
+|:--|:--|:--|
+| Title | Titel der Quelle, wird für das Eventfile benötigt | birthdays |
+|url | URL des ICS-Files, wenn im Internet verfügbar  |https://www.schulferien.eu/downloads/ical4.php?land=HE&type=0&year=2021 |
+| file |Lokale Datei  | ./data/birthdays.csv |
+| color | Farbe, die Events im Kalender haben soll  | Black!20 |
+| period | Handelt es sich um Zeiträume, also mehrere Tage hintereinander (```true```=Zeitraum). Standardmäßig wird ```false`` angenommen | true/false |
+
+| calcDifference | Soll der Unterschied zu heute berechnet werden, bspw. für das Alter von Geburtstagen? Standardmäßig wird ```false``` angenommen | true/false |
+
+## Details
+### Calc Difference
+
+- Wenn in der CSV die Jahreszahl größer als das aktuelle Jahr ist, wird kein Alter berechnet
 
 ## Quellen
 
@@ -22,4 +39,7 @@ Ein Ruby-Script um einen Jahreskalender zu erzeugen.
 ## ToDOs
 
 - Wichtigkeit der Termine (Feiertage > Wochenende > Ferien)
+- 
+## Lizenz
 
+MIT Lizenz gilt nicht für die Tex-Dateien, diese stehen unter CC-BY-SA, siehe https://github.com/rolfn/kalenderRN
